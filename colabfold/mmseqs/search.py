@@ -450,12 +450,6 @@ def main():
         threads=args.threads,
     )
 
-    for job_number, (raw_jobname, _, _) in enumerate(queries_unique):
-        if args.index_by_seq_id:
-            args.base.joinpath(f"{job_number}.a3m").rename(
-                args.base.joinpath(f"{job_number}_{raw_jobname}.a3m")
-            )
-
     if is_complex == True:
         mmseqs_search_pair(
             mmseqs=args.mmseqs,
@@ -494,6 +488,13 @@ def main():
                 args.base.joinpath(f"{job_number}_{raw_jobname}.a3m").write_text(msa)
             else:
                 args.base.joinpath(f"{job_number}.a3m").write_text(msa)
+
+    else:
+        for job_number, (raw_jobname, _, _) in enumerate(queries_unique):
+            if args.index_by_seq_id:
+                args.base.joinpath(f"{job_number}.a3m").rename(
+                    args.base.joinpath(f"{job_number}_{raw_jobname}.a3m")
+                )
 
     query_file.unlink()
     run_mmseqs(args.mmseqs, ["rmdb", args.base.joinpath("qdb")])
