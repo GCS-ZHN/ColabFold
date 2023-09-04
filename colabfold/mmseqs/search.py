@@ -375,6 +375,12 @@ def main():
     parser.add_argument("--max-accept", type=int, default=1000000)
     parser.add_argument("--db-load-mode", type=int, default=0)
     parser.add_argument("--threads", type=int, default=64)
+    # custom arguments
+    parser.add_argument(
+        "--index-by-seq-id", 
+        default=False, 
+        action="store_true",
+        help="Index the queries by sequence id instead of integer id")
     args = parser.parse_args()
 
     queries, is_complex = get_queries(args.query, None)
@@ -443,6 +449,13 @@ def main():
         db_load_mode=args.db_load_mode,
         threads=args.threads,
     )
+
+    for job_number, (raw_jobname, _, _) in enumerate(queries_unique):
+        if args.index_by_seq_id:
+            args.base.joinpath(f"{job_number}.a3m").rename(
+                args.base.joinpath(f"{job_number}_{raw_jobname}.a3m")
+            )
+
     if is_complex == True:
         mmseqs_search_pair(
             mmseqs=args.mmseqs,
@@ -476,7 +489,11 @@ def main():
             msa = msa_to_str(
                 unpaired_msa, paired_msa, query_sequences, query_seqs_cardinality
             )
-            args.base.joinpath(f"{job_number}.a3m").write_text(msa)
+            if args.index_by_seq_id:
+                raw_jobname = raw_jobname.split(" ")[0]
+                args.base.joinpath(f"{job_number}_{raw_jobname}.a3m").write_text(msa)
+            else:
+                args.base.joinpath(f"{job_number}.a3m").write_text(msa)
 
     query_file.unlink()
     run_mmseqs(args.mmseqs, ["rmdb", args.base.joinpath("qdb")])
